@@ -5,8 +5,12 @@ The application must start even if GEMINI_API_KEY is not set —
 only Gemini-dependent features will be unavailable.
 """
 
+from __future__ import annotations
+
+from typing import Any, Union
+import json
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -18,7 +22,7 @@ class Settings(BaseSettings):
         description="Google Gemini API key. Leave empty to run without LLM features.",
     )
     gemini_model: str = Field(
-        default="gemini-3.6-flash",
+        default="gemini-2.5-flash",
         description="Gemini model name for inference.",
     )
 
@@ -33,7 +37,7 @@ class Settings(BaseSettings):
         default="development",
         description="Application environment ('development', 'staging', 'production').",
     )
-    allowed_origins: list[str] = Field(
+    allowed_origins: Union[list[str], str] = Field(
         default_factory=lambda: [
             "http://localhost:5173",
             "http://127.0.0.1:5173",
@@ -42,6 +46,27 @@ class Settings(BaseSettings):
         ],
         description="List of allowed CORS origins.",
     )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Normalize allowed origins into a clean list of strings."""
+        val = self.allowed_origins
+        if isinstance(val, list):
+            return val
+        if isinstance(val, str):
+            val = val.strip()
+            if val.startswith("[") and val.endswith("]"):
+                try:
+                    return json.loads(val)
+                except Exception:
+                    pass
+            return [orig.strip() for orig in val.split(",") if orig.strip()]
+        return [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
 
     # --- Application ---
     app_name: str = "Mehman.io AI Hotel Booking Agent"

@@ -80,7 +80,7 @@ def create_app() -> FastAPI:
     # --- CORS (Environment-driven allowed origins + Vercel / localhost regex) ---
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.allowed_origins if "*" not in settings.allowed_origins else ["*"],
+        allow_origins=settings.cors_origins if "*" not in settings.cors_origins else ["*"],
         allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+",
         allow_credentials=True,
         allow_methods=["*"],
