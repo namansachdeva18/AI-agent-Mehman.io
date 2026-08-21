@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         description="Google Gemini API key. Leave empty to run without LLM features.",
     )
     gemini_model: str = Field(
-        default="gemini-2.5-flash",
+        default="gemini-3.6-flash",
         description="Gemini model name for inference.",
     )
 
