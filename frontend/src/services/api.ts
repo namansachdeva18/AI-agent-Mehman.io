@@ -13,7 +13,7 @@ import type {
   StateResponse,
 } from '../types';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://ai-agent-mehman-io.onrender.com').replace(/\/+$/, '');
 const SESSION_STORAGE_KEY = 'mehman_session_id';
 
 export interface ApiErrorDetail {
