@@ -1,47 +1,83 @@
-# Mehman.io — AI Hotel Booking Concierge
+# Mehman.io — AI Hotel Booking Concierge (Mira)
+
+[![Live Web App](https://img.shields.io/badge/Vercel-Live%20App-black?logo=vercel)](https://ai-agent-mehman-io.vercel.app)
+[![Live Backend API](https://img.shields.io/badge/Render-FastAPI%20Backend-blue?logo=render)](https://ai-agent-mehman-io.onrender.com/health)
+[![Tests](https://img.shields.io/badge/Tests-19%2F19%20Passing-brightgreen)](https://github.com/namansachdeva18/AI-agent-Mehman.io)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-blue?logo=python)](https://www.python.org/)
+[![React 19](https://img.shields.io/badge/React-19.0-61dafb?logo=react)](https://react.dev/)
 
 Mehman.io is a production-grade conversational AI hotel booking concierge for luxury Indian properties. It pairs **Google Gemini structured extraction** with an **authoritative SQLite database**, **deterministic tool execution**, a **multi-strategy recommendation engine**, and **persistent multi-turn state**.
+
+* **🌐 Live Web Application:** [https://ai-agent-mehman-io.vercel.app](https://ai-agent-mehman-io.vercel.app)
+* **⚡ Live Backend API:** [https://ai-agent-mehman-io.onrender.com](https://ai-agent-mehman-io.onrender.com)
 
 ---
 
 ## 🏛️ System Architecture
 
 ```
-Guest Message
-     │
-     ▼
-[ Intent & State Extraction ] (Gemini Structured Output + Offline Fallback)
-     │
-     ▼
-[ Upstream State Invalidation ] (Destination / Date / Capacity mutation safety)
-     │
-     ▼
-[ Deterministic Tool Execution ] (search_properties, check_availability, calculate_price, etc.)
-     │
-     ▼
-[ Grounded Response Generation ] (Authoritative DB records, Zero Price Arithmetic)
-     │
-     ▼
-[ State Persistence & Action Router ] (SQLite Session update + Move toward Booking Hold)
+                               ┌────────────────────────┐
+                               │   Guest User (Chat)    │
+                               └───────────┬────────────┘
+                                           │ HTTP POST /api/chat
+                                           ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FastAPI Application Layer                                                    │
+│  - Correlation Middleware (X-Request-ID tracking)                            │
+│  - Pydantic Payload Validation & Error Envelopes                             │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       │
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Agent Orchestrator (Decision & Intent Layer)                                 │
+│  1. Semantic Extraction: Gemini Flash / Structured JSON Schema Output        │
+│  2. Invariant & Invalidation Pipeline (State Transition Rules)               │
+│  3. Action Router & Missing Information Clarifier                            │
+└──────────────────┬─────────────────────────────────────┬─────────────────────┘
+                   │                                     │
+                   ▼ Tool Dispatch                       ▼ State & History
+┌──────────────────────────────────────┐ ┌─────────────────────────────────────┐
+│ Deterministic Tool Execution Engine  │ │ SQLite Authoritative Store          │
+│  • search_properties()               │ │  • Properties, Rooms, Amenities    │
+│  • check_availability()              │ │  • Dynamic Pricing & Add-ons       │
+│  • get_room_details()                │ │  • 365-Day Inventory Units         │
+│  • calculate_price() (Zero LLM Math) │ │  • Booking Holds (15-min TTL)      │
+│  • create_booking_hold() (Atomic)    │ │  • Conversation History & State     │
+└──────────────────────────────────────┘ └─────────────────────────────────────┘
 ```
 
-1. **Frontend:** React 19 + TypeScript + Vite + TailwindCSS with a dual-pane UI:
-   - Left Pane: Luxury conversational concierge chat interface.
-   - Right Pane: Real-time **Execution Trace**, **State Inspector**, and **Live 15-Minute Booking Hold Countdown Timer**.
-2. **Backend:** FastAPI (Python 3.13) serving `/api/chat` with structured payload validation, asynchronous session persistence in SQLite, request correlation tracking (`X-Request-ID`), and standardized error envelopes.
-3. **Database:** SQLite (WAL mode) containing 3 properties (Jaipur, Goa, Manali), 9 room types, verified amenities, cancellation policies, dynamic add-on services, and 365-day continuous inventory.
+1. **Frontend (React 19 + TypeScript + Vite + TailwindCSS):**
+   - **Dual-Pane Observability:** Luxury guest chat interface paired with an interactive **Execution Trace**, **State Inspector**, and live **15-Minute Countdown Timer**.
+2. **Backend (FastAPI + Python 3.13):**
+   - Async endpoints with unified error handling (`AppError`), correlation tracking (`X-Request-ID`), and standardized JSON response envelopes.
+3. **Database (SQLite in WAL Mode):**
+   - Single source of truth containing 3 partner properties (Jaipur, Goa, Manali), 9 room types, verified amenities, cancellation policies, dynamic add-on services, and 365-day continuous inventory.
+
+---
+
+## 🔁 The Core Agent Flow
+
+Every user utterance strictly executes through a deterministic 7-stage cycle:
+$$\text{Guest message} \xrightarrow{} \text{update state} \xrightarrow{} \text{decide next action} \xrightarrow{} \text{call tool} \xrightarrow{} \text{validate result} \xrightarrow{} \text{respond naturally} \xrightarrow{} \text{continue toward booking}$$
 
 ---
 
 ## 🚀 Quickstart & Setup Instructions
 
-### 1. Backend Setup
+### 1. Prerequisites
+* Python 3.11+
+* Node.js 18+
+
+### 2. Backend Setup
 ```bash
 cd backend
 python -m venv venv
 
-# Windows PowerShell:
+# Activate Virtual Environment:
+# On Windows PowerShell:
 venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
 
 # Install dependencies:
 pip install -r requirements.txt
@@ -50,10 +86,10 @@ pip install -r requirements.txt
 python -m app.database.seed
 
 # Run the FastAPI server:
-venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 2. Frontend Setup
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install
@@ -65,19 +101,19 @@ Open `http://localhost:5173` in your browser.
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file in the `backend/` directory:
+Create a `.env` file in the `backend/` directory (see `backend/.env.example`):
 
 ```env
 # Google Gemini API Key (Optional — system automatically uses deterministic fallback if absent or rate-limited)
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
 
 # Database Configuration
-DATABASE_URL=sqlite:///mehman.db
+DATABASE_URL=sqlite:///data/mehman.db
 
 # Server Configuration
-HOST=127.0.0.1
-PORT=8000
-ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+ENVIRONMENT=development
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ---
@@ -87,14 +123,13 @@ ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ### Backend Unit & Agent Tests
 ```bash
 cd backend
-venv\Scripts\pytest tests/test_agent.py -v
-venv\Scripts\python test_14_scenarios.py
+pytest tests/test_agent.py -v
 ```
 
-### Evaluation Golden Dataset (18 Categories)
+### Golden Dataset Evaluation (18 Test Categories)
 ```bash
 cd backend
-venv\Scripts\pytest evals/ -v
+pytest evals/ -v
 ```
 
 ### Frontend Tests
