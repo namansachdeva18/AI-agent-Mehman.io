@@ -106,7 +106,7 @@ Create a `.env` file in the `backend/` directory (see `backend/.env.example`):
 ```env
 # Google Gemini API Key (Optional — system automatically uses deterministic fallback if absent or rate-limited)
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 
 # Database Configuration
 DATABASE_URL=sqlite:///data/mehman.db
